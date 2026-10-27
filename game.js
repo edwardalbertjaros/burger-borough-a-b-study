@@ -1,13 +1,20 @@
 (() => {
   "use strict";
 
-  const BUILD = "2026.10.26-tap-kitchen-v4";
+  const BUILD = "2026.10.27-resume-v5";
   const pathCode = window.BB_PATH === "game-1" ? "game-1" : "game-2";
   const storyMode = window.BB_STORY === true;
   const screen = document.querySelector("#screen");
   const levelStat = document.querySelector("#levelStat");
-  const scoreStat = document.querySelector("#scoreStat");
+  const progressLabel = document.querySelector("#progressLabel");
+  const progressStat = document.querySelector("#progressStat");
+  const bucksStat = document.querySelector("#bucksStat");
   const storageKey = `burger-borough-${BUILD}-${pathCode}`;
+  const MAX_BOROUGH_BUCKS = 900;
+  const BB_PER_SCHEDULED_ORDER = 16;
+  const BB_PER_COMPLETED_LEVEL = 6;
+  const MAX_LEVEL_ERRORS = 5;
+  const OWNER_ICON = "🧑‍🍳";
 
   const FOOD_DEFS = {
     burger: {
@@ -83,29 +90,38 @@
       ["burger"], ["burger"], ["burger"], ["burger"]
     ],
     2: [
-      ["burger", "fries"], ["burger"], ["fries"],
-      ["burger", "fries"], ["burger"], ["burger", "fries"]
+      ["burger", "fries"], ["burger", "fries"], ["burger", "fries"],
+      ["burger", "fries"], ["burger", "fries"], ["burger", "fries"]
     ],
     3: [
-      ["burger", "fries"], ["shake"], ["burger", "shake"], ["fries"],
-      ["burger", "fries", "shake"], ["burger"], ["fries", "shake"], ["burger", "shake"]
+      ["burger", "fries", "shake"], ["burger", "fries", "shake"],
+      ["burger", "fries", "shake"], ["burger", "fries", "shake"],
+      ["burger", "fries", "shake"], ["burger", "fries", "shake"],
+      ["burger", "fries", "shake"], ["burger", "fries", "shake"]
     ],
     4: [
-      ["burger", "fries"], ["chicken"], ["shake"], ["burger", "chicken"],
-      ["fries", "shake"], ["chicken", "fries"], ["burger", "fries", "shake"],
-      ["chicken", "shake"], ["burger"], ["burger", "chicken", "fries"]
+      ["burger", "fries", "shake", "chicken"], ["burger", "fries", "shake", "chicken"],
+      ["burger", "fries", "shake", "chicken"], ["burger", "fries", "shake", "chicken"],
+      ["burger", "fries", "shake", "chicken"], ["burger", "fries", "shake", "chicken"],
+      ["burger", "fries", "shake", "chicken"], ["burger", "fries", "shake", "chicken"],
+      ["burger", "fries", "shake", "chicken"], ["burger", "fries", "shake", "chicken"]
     ],
     5: [
-      ["burger", "fries"], ["chicken", "shake"], ["icecream"], ["burger", "shake"],
-      ["fries", "icecream"], ["chicken", "fries", "shake"], ["burger", "icecream"],
-      ["chicken"], ["burger", "fries", "shake"], ["icecream", "shake"],
-      ["chicken", "fries"], ["burger", "chicken", "icecream"]
+      ["burger", "fries", "shake", "chicken", "icecream"], ["burger", "fries", "shake", "chicken", "icecream"],
+      ["burger", "fries", "shake", "chicken", "icecream"], ["burger", "fries", "shake", "chicken", "icecream"],
+      ["burger", "fries", "shake", "chicken", "icecream"], ["burger", "fries", "shake", "chicken", "icecream"],
+      ["burger", "fries", "shake", "chicken", "icecream"], ["burger", "fries", "shake", "chicken", "icecream"],
+      ["burger", "fries", "shake", "chicken", "icecream"], ["burger", "fries", "shake", "chicken", "icecream"],
+      ["burger", "fries", "shake", "chicken", "icecream"], ["burger", "fries", "shake", "chicken", "icecream"]
     ],
     6: [
-      ["pizza"], ["burger", "fries"], ["pizza", "shake"], ["chicken"],
-      ["burger", "icecream"], ["pizza", "fries"], ["shake"], ["chicken", "fries"],
-      ["pizza", "icecream"], ["burger", "shake"], ["pizza", "chicken"],
-      ["burger", "fries", "shake"], ["pizza", "fries", "icecream"], ["burger", "pizza", "chicken"]
+      ["burger", "fries", "shake", "chicken", "icecream", "pizza"], ["burger", "fries", "shake", "chicken", "icecream", "pizza"],
+      ["burger", "fries", "shake", "chicken", "icecream", "pizza"], ["burger", "fries", "shake", "chicken", "icecream", "pizza"],
+      ["burger", "fries", "shake", "chicken", "icecream", "pizza"], ["burger", "fries", "shake", "chicken", "icecream", "pizza"],
+      ["burger", "fries", "shake", "chicken", "icecream", "pizza"], ["burger", "fries", "shake", "chicken", "icecream", "pizza"],
+      ["burger", "fries", "shake", "chicken", "icecream", "pizza"], ["burger", "fries", "shake", "chicken", "icecream", "pizza"],
+      ["burger", "fries", "shake", "chicken", "icecream", "pizza"], ["burger", "fries", "shake", "chicken", "icecream", "pizza"],
+      ["burger", "fries", "shake", "chicken", "icecream", "pizza"], ["burger", "fries", "shake", "chicken", "icecream", "pizza"]
     ]
   };
 
@@ -123,7 +139,7 @@
     },
     {
       title: "Make Fries Worth the Trip",
-      challenge: "The Palace advertises a cheap side. Bea needs the fries to stand out without starting a price war.",
+      challenge: "The Palace advertises a cheap side. B needs the fries to stand out without starting a price war.",
       newFood: "fries",
       candidates: [
         { id: "carmen", name: "Carmen Lee", icon: "👩🏻", bio: "A campus-event planner who studies sampling campaigns.", idea: "Offer tiny seasoning samples and let customers vote.", fit: true },
@@ -134,7 +150,7 @@
     },
     {
       title: "Stop the Broken-Machine Rumor",
-      challenge: "A rumor claims Burger Borough’s shake machine is broken. Bea needs visible proof that milkshakes are being served.",
+      challenge: "A rumor claims Burger Borough’s shake machine is broken. B needs visible proof that milkshakes are being served.",
       newFood: "shake",
       candidates: [
         { id: "maya", name: "Maya Torres", icon: "👩🏽", bio: "A local food creator known for live demonstrations.", idea: "Stream the first milkshake orders as they are made.", fit: true },
@@ -145,7 +161,7 @@
     },
     {
       title: "Turn Up the Heat",
-      challenge: "The Palace calls Bea’s new spicy-chicken sandwich ‘too hot to handle.’ Bea needs a campaign that reduces uncertainty.",
+      challenge: "The Palace calls B’s new spicy-chicken sandwich ‘too hot to handle.’ B needs a campaign that reduces uncertainty.",
       newFood: "chicken",
       candidates: [
         { id: "theo", name: "Theo Grant", icon: "🧔🏽", bio: "A pop-up host who makes comparison menus easy to understand.", idea: "Show mild, hot, and extra-hot choices clearly.", fit: true },
@@ -156,7 +172,7 @@
     },
     {
       title: "Win Back an Angry Customer",
-      challenge: "A rush-order mistake reaches an upset customer. Bea must recover trust without giving away an unlimited replacement.",
+      challenge: "A rush-order mistake reaches an upset customer. B must recover trust without giving away an unlimited replacement.",
       newFood: "icecream",
       candidates: [
         { id: "imani", name: "Imani Wells", icon: "👩🏿", bio: "A service coach who tracks recovery costs.", idea: "Promote a capped complimentary ice-cream recovery.", fit: true },
@@ -167,7 +183,7 @@
     },
     {
       title: "Take Back the Block",
-      challenge: "Burger Borough is stable again. Bea adds pizza so the restaurant can compete directly without copying the Palace.",
+      challenge: "Burger Borough is stable again. B adds pizza so the restaurant can compete directly without copying the Palace.",
       newFood: "pizza",
       candidates: [
         { id: "lena", name: "Lena Okafor", icon: "👩🏾", bio: "A community organizer who builds collaborative launches.", idea: "Let neighbors name the first Borough pizza.", fit: true },
@@ -200,7 +216,9 @@
     levelScores: Array(6).fill(0),
     levelErrors: Array(6).fill(0),
     levelTimeouts: Array(6).fill(0),
+    levelFailures: Array(6).fill(0),
     restarts: Array(6).fill(0),
+    currentRunErrors: 0,
     ordersServed: 0,
     scheduledOrdersCompleted: 0,
     ordersAttempted: 0,
@@ -216,10 +234,16 @@
     storyChoices: Array(6).fill(""),
     campaignResults: Array(6).fill(""),
     recoveryChoice: "",
-    rewardChoice: "",
     endedEarly: false,
     exitReason: "",
     resumeScreen: "intro",
+    exitReview: false,
+    exitAttempts: 0,
+    resumedAfterExit: false,
+    resumeCount: 0,
+    firstExitLevel: 0,
+    firstExitOrder: 0,
+    firstExitActiveSeconds: 0,
     finalized: false
   });
 
@@ -294,8 +318,8 @@
     return order.items.reduce((sum, item) => sum + Object.keys(item.choices).length, 0);
   }
 
-  function timeLimitFor(order = currentOrder()) {
-    return Math.max(34, 28 + countRequiredChoices(order) * 5 - Math.min(4, state.level - 1));
+  function timeLimitFor(order = currentOrder(), levelNumber = state.level) {
+    return Math.max(28, 24 + countRequiredChoices(order) * 3 - Math.min(4, levelNumber - 1));
   }
 
   function rewardForLevel(level = state.completedLevel) {
@@ -311,9 +335,25 @@
     return state.totalScore + (activeLevelScore ? state.levelScore : 0);
   }
 
+  function boroughBucks() {
+    return Math.min(MAX_BOROUGH_BUCKS,
+      state.scheduledOrdersCompleted * BB_PER_SCHEDULED_ORDER
+      + state.completedLevel * BB_PER_COMPLETED_LEVEL);
+  }
+
+  function progressStage() {
+    return Math.min(10, Math.floor(boroughBucks() / 100) + 1);
+  }
+
+  function starRating() {
+    return (progressStage() / 2).toFixed(1);
+  }
+
   function updateHeader() {
     levelStat.textContent = String(Math.min(state.level, 6));
-    scoreStat.textContent = visibleScore().toLocaleString();
+    progressLabel.textContent = storyMode ? "Rating" : "Progress";
+    progressStat.textContent = storyMode ? `★ ${starRating()}` : `${progressStage()}/10`;
+    bucksStat.textContent = boroughBucks().toLocaleString();
   }
 
   function formatTime(seconds) {
@@ -341,6 +381,8 @@
     }
     clearInterval(timerId);
     timerId = 0;
+    const shell = document.querySelector(".app-shell");
+    if (shell) shell.classList.remove("timer-danger");
   }
 
   function resumeActiveClocks() {
@@ -371,10 +413,17 @@
     const remaining = currentRemaining();
     const timerText = document.querySelector("#timerText");
     const timerFill = document.querySelector("#timerFill");
-    if (timerText) timerText.textContent = remaining > 0 ? `${Math.ceil(remaining)} sec` : "Late";
+    const urgent = remaining > 0 && remaining <= 5;
+    const shell = document.querySelector(".app-shell");
+    if (shell) shell.classList.toggle("timer-danger", urgent);
+    if (timerText) {
+      timerText.textContent = remaining > 0 ? (urgent ? `⚠ ${Math.ceil(remaining)} sec` : `${Math.ceil(remaining)} sec`) : "Late";
+      timerText.classList.toggle("timer-urgent", urgent);
+    }
     if (timerFill) {
       const percent = state.orderLimit ? Math.max(0, Math.min(100, (remaining / state.orderLimit) * 100)) : 0;
       timerFill.style.width = `${percent}%`;
+      timerFill.classList.toggle("urgent", urgent);
       timerFill.classList.toggle("late", remaining <= 0);
     }
     if (remaining <= 0 && !state.orderTimedOut) {
@@ -384,7 +433,7 @@
       state.timerExpirations += 1;
       state.levelTimeouts[state.level - 1] += 1;
       state.streak = 0;
-      state.status = "The rush timer expired. You can still finish this order, but the speed bonus is gone.";
+      state.status = "⚠️ The rush timer expired. You can still finish this order, but the speed bonus is gone.";
       state.statusType = "error";
       const status = document.querySelector("#playStatus");
       if (status) {
@@ -396,6 +445,7 @@
   }
 
   function exitButton() {
+    if (state.completedLevel >= 6) return "";
     return `<button class="quiet" data-action="request-exit">I've played enough of Burger Borough to complete the survey</button>`;
   }
 
@@ -403,7 +453,7 @@
     pauseActiveClocks();
     state.screen = "intro";
     const hero = storyMode
-      ? `<div class="hero story-hero"><div class="hero-character">👩🏽‍🍳</div><div><p class="eyebrow light">Chef Bea needs your help</p><h1>Can Burger Borough survive?</h1><p>Pizza Pleasure Palace opened across the street. Help Bea serve the neighborhood, choose new team members, and build Burger Borough’s comeback.</p></div></div>`
+      ? `<div class="hero story-hero"><div class="hero-character">${OWNER_ICON}</div><div><p class="eyebrow light">Owner B needs your help</p><h1>Can Burger Borough survive?</h1><p>Pizza Pleasure Palace opened across the street. Help B serve the neighborhood and build Burger Borough’s comeback.</p></div></div>`
       : `<div class="hero"><p class="eyebrow light">Burger Borough</p><h1>Run the restaurant rush.</h1><p>Read each ticket, prepare the requested meal, and serve the order before the rush timer runs out.</p></div>`;
     screen.innerHTML = `${hero}
       <div class="how-to"><h2>How to play</h2><ol>
@@ -420,7 +470,13 @@
 
   function selectedCandidate() {
     const id = state.storyChoices[state.level - 1];
-    return currentStory().candidates.find(candidate => candidate.id === id) || null;
+    let candidate = currentStory().candidates.find(person => person.id === id) || null;
+    if (!candidate && storyMode) {
+      candidate = currentStory().candidates.find(person => person.fit) || currentStory().candidates[0];
+      state.storyChoices[state.level - 1] = candidate.id;
+      save();
+    }
+    return candidate;
   }
 
   function renderBrief() {
@@ -428,22 +484,14 @@
     state.screen = "brief";
     const story = currentStory();
     const food = FOOD_DEFS[story.newFood];
-    const candidate = selectedCandidate();
-    if (storyMode && !candidate) {
-      screen.innerHTML = `<div class="scene-card"><div class="scene-characters"><span>👩🏽‍🍳</span><span>🏪</span></div><p class="eyebrow">Chapter ${state.level}</p><h1>${esc(story.title)}</h1><p>${esc(story.challenge)}</p></div>
-        <div class="unlock-card"><span>${food.icon}</span><div><small>New food for this chapter</small><strong>${esc(food.name)}</strong></div></div>
-        <h2>Who should Bea hire?</h2><p>Choose the candidate whose marketing idea best addresses this chapter’s problem. Your choice will shape the campaign outcome.</p>
-        <div class="candidate-grid">${story.candidates.map(person => `<button class="candidate" data-hire="${esc(person.id)}"><span class="avatar">${person.icon}</span><strong>${esc(person.name)}</strong><small>${esc(person.bio)}</small><span class="idea"><b>Marketing idea:</b> ${esc(person.idea)}</span></button>`).join("")}</div>
-        ${exitButton()}`;
-    } else {
-      const content = storyMode
-        ? `<div class="scene-card"><div class="scene-characters"><span>👩🏽‍🍳</span><span>${candidate.icon}</span></div><p class="eyebrow">Chapter ${state.level}</p><h1>${esc(story.title)}</h1><p><strong>${esc(candidate.name)}</strong> joins Bea’s team. The campaign will use this idea: ${esc(candidate.idea)}</p></div>`
-        : `<div class="level-card"><p class="eyebrow">Restaurant Level ${state.level}</p><h1>${levelCombos().length} customer orders</h1><p>A new food station is available. Orders use the same ticket-and-tray controls while the menu becomes more complex.</p></div>`;
-      screen.innerHTML = `${content}
-        <div class="unlock-card"><span>${food.icon}</span><div><small>Food station available</small><strong>${esc(food.name)}</strong></div></div>
-        <div class="metrics"><div><small>Customers</small><strong>${levelCombos().length}</strong></div><div><small>New station</small><strong>${food.icon}</strong></div><div><small>Level</small><strong>${state.level}/6</strong></div></div>
-        <button class="primary" data-action="start-level">Start Level ${state.level}</button>${exitButton()}`;
-    }
+    const candidate = storyMode ? selectedCandidate() : null;
+    const content = storyMode
+      ? `<div class="scene-card"><div class="scene-characters"><span>${OWNER_ICON}</span><span>${candidate.icon}</span></div><p class="eyebrow">Chapter ${state.level}</p><h1>${esc(story.title)}</h1><p>${esc(story.challenge)}</p><p><strong>${esc(candidate.name)}</strong> joins B’s team with a plan: ${esc(candidate.idea)}</p></div>`
+      : `<div class="level-card"><p class="eyebrow">Restaurant Level ${state.level}</p><h1>${levelCombos().length} customer orders</h1><p>A new food station is available. Orders use the same ticket-and-tray controls while the menu becomes more complex.</p></div>`;
+    screen.innerHTML = `${content}
+      <div class="unlock-card"><span>${food.icon}</span><div><small>Food station available</small><strong>${esc(food.name)}</strong></div></div>
+      <div class="metrics"><div><small>Customers</small><strong>${levelCombos().length}</strong></div><div><small>New station</small><strong>${food.icon}</strong></div><div><small>Level</small><strong>${state.level}/6</strong></div></div>
+      <button class="primary" data-action="start-level">Start Level ${state.level}</button>${exitButton()}`;
     save();
     updateHeader();
   }
@@ -466,6 +514,7 @@
   function setupLevel() {
     state.orderIndex = 0;
     state.levelScore = 0;
+    state.currentRunErrors = 0;
     state.complaintTriggered = false;
     state.complaintRemake = false;
     state.levelActiveSince = Date.now();
@@ -497,7 +546,7 @@
       const details = Object.values(item.choices).join(" · ");
       return `<li><span>${FOOD_DEFS[item.kind].icon} ${esc(FOOD_DEFS[item.kind].name)}</span><span>${esc(details)}</span></li>`;
     }).join("");
-    return `<div class="ticket ${state.complaintRemake ? "complaint" : ""}">${correction}<div class="ticket-head"><span>${esc(label)}</span><span>${esc(order.id)}</span></div><ul class="ticket-items">${lines}</ul></div>`;
+    return `<div id="currentTicket" tabindex="-1" class="ticket ${state.complaintRemake ? "complaint" : ""} ${state.statusType === "error" ? "ticket-error" : ""}">${correction}<div class="ticket-head"><span>${esc(label)}</span><span>${esc(order.id)}</span></div><ul class="ticket-items">${lines}</ul></div>`;
   }
 
   function optionsFor(kind, field, options) {
@@ -531,16 +580,17 @@
     const progress = Math.round((state.orderIndex / total) * 100);
     const customer = customerFor(state.level, state.orderIndex);
     const characterStrip = storyMode
-      ? `<div class="character-strip"><span>👩🏽‍🍳</span><div><strong>Chef Bea</strong><small>${state.complaintRemake ? `Let’s correct ${esc(customer.name)}’s order carefully.` : `Read ${esc(customer.name)}’s ticket before building the meal.`}</small></div></div>`
+      ? `<div class="character-strip"><span>${OWNER_ICON}</span><div><strong>B, Burger Borough’s owner</strong><small>${state.complaintRemake ? `Let’s correct ${esc(customer.name)}’s order carefully.` : `Read ${esc(customer.name)}’s ticket before building the meal.`}</small></div></div>`
       : "";
     const remaining = currentRemaining();
     screen.innerHTML = `<p class="eyebrow">Level ${state.level} · ${state.complaintRemake ? "Correction" : `Order ${state.orderIndex + 1} of ${total}`}</p>
-      <div class="play-summary"><div><small>Served this level</small><strong>${state.orderIndex}/${total}</strong></div><div><small>Level score</small><strong>${state.levelScore}</strong></div><div><small>Rush timer</small><strong id="timerText">${remaining > 0 ? `${Math.ceil(remaining)} sec` : "Late"}</strong></div></div>
+      <div class="play-summary"><div><small>Served this level</small><strong>${state.orderIndex}/${total}</strong></div><div><small>Level score</small><strong>${state.levelScore}</strong></div><div><small>Rush timer</small><strong id="timerText">${remaining > 0 ? `${Math.ceil(remaining)} sec` : "Late"}</strong></div><div><small>Mistakes this level</small><strong>${state.currentRunErrors}/${MAX_LEVEL_ERRORS}</strong></div></div>
       <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
       <div class="rush-track" aria-label="Time remaining"><div id="timerFill" class="rush-fill ${remaining <= 0 ? "late" : ""}" style="width:${state.orderLimit ? Math.max(0, Math.min(100, (remaining / state.orderLimit) * 100)) : 0}%"></div></div>
       ${characterStrip}
       <div class="counter-scene"><div class="queue-label">Customer counter · ${total - state.orderIndex} waiting</div><div class="customer-queue">${queueMarkup()}</div></div>
       ${ticketMarkup(order)}
+      <button class="ticket-jump" data-action="review-ticket">🧾 Review Customer Ticket</button>
       <div class="kitchen-heading"><h2>Kitchen stations</h2><span>Options are mixed for every order</span></div>
       ${order.items.map(stationMarkup).join("")}
       ${trayMarkup(order)}
@@ -585,21 +635,56 @@
   function wrongSubmission(validation) {
     state.incorrectSubmissions += 1;
     state.levelErrors[state.level - 1] += 1;
+    state.currentRunErrors += 1;
     state.streak = 0;
     state.levelScore = Math.max(0, state.levelScore - 20);
     if (!state.orderTimedOut && state.orderDeadline) state.orderDeadline -= 5000;
     state.status = validation.correct === 0
-      ? "The tray does not match the ticket yet. Nothing was served. Review every category."
-      : `${validation.wrong} ticket selection${validation.wrong === 1 ? "" : "s"} still do not match. The customer is waiting and 5 seconds were deducted.`;
+      ? "❌ The tray does not match the ticket yet. Nothing was served. Review every category."
+      : `❌ ${validation.wrong} ticket selection${validation.wrong === 1 ? "" : "s"} still do not match. The customer is waiting and 5 seconds were deducted.`;
     state.statusType = "error";
+    if (state.currentRunErrors >= MAX_LEVEL_ERRORS) {
+      pauseActiveClocks();
+      state.levelFailures[state.level - 1] += 1;
+      state.screen = "level-failed";
+      save();
+      renderLevelFailed();
+      return;
+    }
     save();
     renderPlay();
+    showErrorFeedback();
+  }
+
+  function showErrorFeedback() {
+    const shell = document.querySelector(".app-shell");
+    const ticket = document.querySelector(".ticket");
+    if (shell) shell.classList.add("error-flash");
+    if (ticket) ticket.classList.add("error-shake");
+    if (typeof window.setTimeout === "function") {
+      window.setTimeout(() => {
+        if (shell) shell.classList.remove("error-flash");
+        if (ticket) ticket.classList.remove("error-shake");
+      }, 650);
+    }
+  }
+
+  function renderLevelFailed() {
+    pauseActiveClocks();
+    state.screen = "level-failed";
+    const failures = state.levelFailures[state.level - 1];
+    screen.innerHTML = `<div class="failure-hero" role="alert"><span class="failure-icon">🍔💥</span><p class="eyebrow light">Rush failed</p><h1>The kitchen was overwhelmed.</h1><p>This level reached ${MAX_LEVEL_ERRORS} incorrect serving attempts. Your earlier completed levels, Burger Borough Bucks, and study progress are still saved.</p></div>
+      <div class="metrics"><div><small>Current level</small><strong>${state.level}</strong></div><div><small>Orders completed</small><strong>${state.orderIndex}/${levelCombos().length}</strong></div><div><small>Level failures</small><strong>${failures}</strong></div></div>
+      <div class="exit-decision-grid"><button class="exit-decision" data-action="retry-failed-level">Retry This Level</button><button class="exit-decision" data-action="request-exit">Review Progress and Decide Whether to Stop</button></div>`;
+    save();
+    updateHeader();
   }
 
   function triggerComplaint() {
     pauseActiveClocks();
     state.complaintTriggered = true;
     state.complaintRemake = true;
+    if (storyMode) state.recoveryChoice = "icecream";
     state.screen = "complaint";
     save();
     renderComplaint();
@@ -653,19 +738,10 @@
     pauseActiveClocks();
     state.screen = "complaint";
     const customer = customerFor(5, 5);
-    if (storyMode && !state.recoveryChoice) {
-      screen.innerHTML = `<div class="scene-card complaint"><div class="scene-characters"><span>${customer.icon}</span><span>👩🏽‍🍳</span></div><p class="eyebrow">Customer recovery</p><h1>${esc(customer.name)}’s order needs to be remade.</h1><p>The meal must be prepared again either way. Bea also needs a recovery policy that protects trust and controls the restaurant’s cost.</p></div>
-        <h2>Which policy should Bea use?</h2>
-        <div class="choice-list">
-          <button class="choice" data-recovery="promise"><strong>Neighbor Promise</strong><small>Let the customer choose any menu item as compensation. Eligible items cost Burger Borough as much as 9 Borough Bucks.</small></button>
-          <button class="choice" data-recovery="icecream"><strong>Complimentary Ice Cream</strong><small>Offer one cone or cup. The profit loss is capped at 2 Borough Bucks.</small></button>
-        </div>${exitButton()}`;
-    } else {
-      const narrative = storyMode
-        ? `<div class="scene-card complaint"><div class="scene-characters"><span>${customer.icon}</span><span>👩🏽‍🍳</span></div><p class="eyebrow">Customer recovery</p><h1>Remake the original order.</h1><p>Bea records your recovery-policy decision. First, the kitchen must prepare the same ticket correctly.</p></div>`
-        : `<div class="level-card complaint"><span class="complaint-badge">ORDER CORRECTION</span><h1>Remake the original order.</h1><p>A customer reported a problem. Complete the same ticket again as an additional restaurant service task.</p></div>`;
-      screen.innerHTML = `${narrative}<button class="primary" data-action="start-remake">Open Correction Ticket</button>${exitButton()}`;
-    }
+    const narrative = storyMode
+      ? `<div class="scene-card complaint"><div class="scene-characters"><span>${customer.icon}</span><span>${OWNER_ICON}</span></div><p class="eyebrow">Customer recovery</p><h1>Remake ${esc(customer.name)}’s original order.</h1><p>B compares the options and chooses one complimentary ice cream, limiting the loss to 2 Borough Bucks instead of an open-ended replacement worth as much as 9. The kitchen must still prepare the original ticket correctly.</p></div>`
+      : `<div class="level-card complaint"><span class="complaint-badge">ORDER CORRECTION</span><h1>Remake the original order.</h1><p>A customer reported a problem. Complete the same ticket again as an additional restaurant service task.</p></div>`;
+    screen.innerHTML = `${narrative}<button class="primary" data-action="start-remake">Open Correction Ticket</button>${exitButton()}`;
     save();
     updateHeader();
   }
@@ -709,10 +785,7 @@
 
   function recoveryOutcomeMarkup() {
     if (!storyMode || state.level !== 5) return "";
-    if (state.recoveryChoice === "promise") {
-      return `<div class="panel complaint"><p class="eyebrow">Recovery-policy result</p><h2>The unlimited promise cost more.</h2><p>Customers consistently selected the highest-priced eligible item. The typical loss reached <strong>9 Borough Bucks</strong>, compared with the capped ice-cream loss.</p><div class="cost-compare"><div><small>Neighbor Promise</small><strong>9 BB</strong></div><div><small>Ice-cream cap</small><strong>2 BB</strong></div></div></div>`;
-    }
-    return `<div class="panel"><p class="eyebrow">Recovery-policy result</p><h2>The specific recovery protected the margin.</h2><p>The complimentary cone or cup rebuilt trust while limiting the profit loss to <strong>2 Borough Bucks</strong>.</p><div class="cost-compare"><div><small>Ice-cream cap</small><strong>2 BB</strong></div><div><small>Any-item maximum</small><strong>9 BB</strong></div></div></div>`;
+    return `<div class="panel"><p class="eyebrow">Recovery result</p><h2>The specific recovery protected the margin.</h2><p>The complimentary cone or cup rebuilt trust while limiting the profit loss to <strong>2 Borough Bucks</strong>.</p><div class="cost-compare"><div><small>Ice-cream cap</small><strong>2 BB</strong></div><div><small>Open-ended maximum</small><strong>9 BB</strong></div></div></div>`;
   }
 
   function renderComplete() {
@@ -727,14 +800,14 @@
       : "";
     const result = state.campaignResults[state.level - 1];
     const content = storyMode
-      ? `<div class="scene-card"><div class="scene-characters"><span>👩🏽‍🍳</span><span>${candidate.icon}</span></div><p class="eyebrow">Chapter ${state.level} complete</p><h1>${state.level === 6 ? "Burger Borough wins the block’s final rush." : "The comeback continues."}</h1><p>${esc(result === "strong-fit" ? story.win : story.mixed)}</p></div>
+      ? `<div class="scene-card"><div class="scene-characters"><span>${OWNER_ICON}</span><span>${candidate.icon}</span></div><p class="eyebrow">Chapter ${state.level} complete</p><h1>${state.level === 6 ? "Burger Borough wins the block’s final rush." : "The comeback continues."}</h1><p>${esc(result === "strong-fit" ? story.win : story.mixed)}</p></div>
          <div class="campaign-card"><span>${result === "strong-fit" ? "📈" : "↗️"}</span><div><strong>${result === "strong-fit" ? "Campaign outperformed Pizza Pleasure Palace" : "Campaign gained ground on Pizza Pleasure Palace"}</strong><small>${esc(candidate.name)}’s marketing idea shaped this result. Food-game points were based only on order accuracy and speed.</small></div></div>`
       : `<div class="level-card"><p class="eyebrow">Level ${state.level} complete</p><h1>${levelCombos().length} customer orders completed</h1><p>The restaurant recorded your order accuracy, service time, and level score. The next level expands the menu.</p></div>`;
     const next = state.level < 6
-      ? `<button class="primary" data-action="next-level">Continue</button>`
+      ? `<button class="primary" data-action="next-level">Continue to Level ${state.level + 1}</button>`
       : `<button class="primary" data-action="finish-game">View Game Results</button>`;
     screen.innerHTML = `${content}${recoveryOutcomeMarkup()}${rewardMarkup}
-      <div class="metrics"><div><small>Level score</small><strong>${state.levelScores[state.level - 1]}</strong></div><div><small>Errors</small><strong>${state.levelErrors[state.level - 1]}</strong></div><div><small>Late orders</small><strong>${state.levelTimeouts[state.level - 1]}</strong></div><div><small>Active time</small><strong>${formatTime(state.levelTimes[state.level - 1])}</strong></div></div>
+      <div class="metrics"><div><small>Level score</small><strong>${state.levelScores[state.level - 1]}</strong></div><div><small>Errors</small><strong>${state.levelErrors[state.level - 1]}</strong></div><div><small>Late orders</small><strong>${state.levelTimeouts[state.level - 1]}</strong></div><div><small>Active time</small><strong>${formatTime(state.levelTimes[state.level - 1])}</strong></div><div><small>Borough Bucks</small><strong>BB$ ${boroughBucks()}</strong></div><div><small>${storyMode ? "Restaurant rating" : "Progress stage"}</small><strong>${storyMode ? `★ ${starRating()}` : `${progressStage()}/10`}</strong></div></div>
       ${next}${exitButton()}`;
     save();
     updateHeader();
@@ -743,11 +816,54 @@
   function renderExitConfirm() {
     pauseActiveClocks();
     state.screen = "exit-confirm";
-    screen.innerHTML = `<p class="eyebrow">End gameplay?</p><h1>You can return to the survey now.</h1><p>Your completed levels, current progress, score, order accuracy, errors, choices, and gameplay time will be included in the result.</p><div class="button-row"><button class="secondary" data-action="resume">Keep Playing</button><button class="primary" data-action="confirm-exit">End Gameplay</button></div>`;
+    screen.innerHTML = `<p class="eyebrow">Gameplay paused</p><h1>Would you like to review your progress?</h1><p>Your exact game position has been saved. You can review your current results and reward status, then continue from where you stopped or finish gameplay and return to the survey.</p><div class="exit-decision-grid"><button class="exit-decision" data-action="resume">Keep Playing</button><button class="exit-decision" data-action="review-exit">Review Progress and Reward</button></div>`;
     save();
   }
 
   function totalActiveSeconds() { return state.levelTimes.reduce((sum, value) => sum + value, 0); }
+
+  function beginExitAttempt() {
+    state.resumeScreen = state.screen;
+    pauseActiveClocks();
+    state.exitAttempts += 1;
+    if (state.firstExitLevel === 0) {
+      state.firstExitLevel = state.level;
+      state.firstExitOrder = Math.min(state.orderIndex + 1, levelCombos().length);
+      state.firstExitActiveSeconds = Math.round(totalActiveSeconds());
+    }
+    state.exitReview = false;
+    state.endedEarly = false;
+    state.exitReason = "";
+    renderExitConfirm();
+  }
+
+  function resumeAfterExit() {
+    const resume = state.resumeScreen || "brief";
+    state.resumedAfterExit = true;
+    state.resumeCount += 1;
+    state.exitReview = false;
+    state.endedEarly = false;
+    state.exitReason = "";
+    state.screen = resume;
+    save();
+    restoreScreen();
+  }
+
+  function beginExitReview() {
+    state.exitReview = true;
+    state.endedEarly = false;
+    state.exitReason = "";
+    save();
+    renderResults();
+  }
+
+  function finishGameplayEarly() {
+    state.exitReview = false;
+    state.endedEarly = true;
+    state.exitReason = `voluntary_level_${state.level}_order_${Math.min(state.orderIndex + 1, levelCombos().length)}`;
+    save();
+    renderContinue();
+  }
 
   function accuracyPercent() {
     if (!state.ordersAttempted) return 0;
@@ -762,24 +878,32 @@
     const totalRestarts = state.restarts.reduce((sum, value) => sum + value, 0);
     const average = state.correctOrders ? state.totalOrderSeconds / state.correctOrders : 0;
     const storyResult = storyMode
-      ? `<div class="results-hero"><span>👩🏽‍🍳</span><div><small>Chef Bea’s progress</small><strong>${state.completedLevel >= 6 ? "Burger Borough completed its comeback." : state.completedLevel >= 5 ? "Burger Borough is stable again." : "Burger Borough’s comeback has begun."}</strong></div></div>`
+      ? `<div class="results-hero"><span>${OWNER_ICON}</span><div><small>B’s restaurant progress</small><strong>${state.completedLevel >= 6 ? "Burger Borough completed its comeback." : state.completedLevel >= 5 ? "Burger Borough is stable again." : "Burger Borough’s comeback has begun."}</strong></div></div>`
       : "";
-    screen.innerHTML = `<p class="eyebrow">${state.endedEarly ? "Gameplay ended" : "Restaurant run complete"}</p><h1>Your Burger Borough Results</h1>${storyResult}
-      <div class="results-grid"><div><small>Levels completed</small><strong>${state.completedLevel}/6</strong></div><div><small>Scheduled orders</small><strong>${state.scheduledOrdersCompleted}/54</strong></div><div><small>Total score</small><strong>${state.totalScore}</strong></div><div><small>Order accuracy</small><strong>${accuracyPercent()}%</strong></div><div><small>Best correct streak</small><strong>${state.bestStreak}</strong></div><div><small>Late orders</small><strong>${state.timerExpirations}</strong></div><div><small>Average order time</small><strong>${formatTime(average)}</strong></div><div><small>Active gameplay</small><strong>${formatTime(totalActiveSeconds())}</strong></div><div><small>Correction remakes</small><strong>${state.complaintRemakes}</strong></div><div><small>Level restarts</small><strong>${totalRestarts}</strong></div></div>
-      <button class="primary" data-action="view-reward">View Earned Reward</button>`;
+    const statusLabel = state.exitReview ? "Gameplay paused" : state.endedEarly ? "Gameplay ended" : "Restaurant run complete";
+    const resultsHeading = state.exitReview ? "Your Current Burger Borough Results" : "Your Burger Borough Results";
+    const rewardButton = state.exitReview ? "View Current Reward Status" : "View Earned Reward";
+    screen.innerHTML = `<p class="eyebrow">${statusLabel}</p><h1>${resultsHeading}</h1>${storyResult}
+      <div class="results-grid"><div><small>Levels completed</small><strong>${state.completedLevel}/6</strong></div><div><small>Scheduled orders</small><strong>${state.scheduledOrdersCompleted}/54</strong></div><div><small>Total score</small><strong>${state.totalScore}</strong></div><div><small>Borough Bucks</small><strong>BB$ ${boroughBucks()}</strong></div><div><small>${storyMode ? "Restaurant rating" : "Kitchen rank"}</small><strong>${storyMode ? `★ ${starRating()}` : progressStage()}</strong></div><div><small>Order accuracy</small><strong>${accuracyPercent()}%</strong></div><div><small>Best correct streak</small><strong>${state.bestStreak}</strong></div><div><small>Late orders</small><strong>${state.timerExpirations}</strong></div><div><small>Average order time</small><strong>${formatTime(average)}</strong></div><div><small>Active gameplay</small><strong>${formatTime(totalActiveSeconds())}</strong></div><div><small>Correction remakes</small><strong>${state.complaintRemakes}</strong></div><div><small>Level restarts</small><strong>${totalRestarts}</strong></div></div>
+      <button class="primary" data-action="view-reward">${rewardButton}</button>`;
     updateHeader();
   }
 
   function rewardPass(reward) {
-    if (reward.id === "none") return `<div class="reward-pass locked"><h2>No food discount unlocked</h2><p>Additional gameplay would be required to unlock a fictional study reward.</p></div>`;
+    if (reward.id === "none") return `<div class="reward-pass locked"><h2>No food discount unlocked yet</h2><p>Keep playing to work toward a fictional Burger Borough food discount.</p></div>`;
     return `<div class="reward-pass"><div class="pass-top"><span>BURGER BOROUGH</span><b>IN-STORE REWARD PASS</b></div><div class="pass-body"><small>STUDY OFFER</small><h2>${esc(reward.name)}</h2><p>In-store redemption would be required.</p></div><div class="barcode" aria-hidden="true"></div><div class="pass-code">BB-${reward.id.toUpperCase()}-${String(state.totalScore).padStart(5, "0")}</div><div class="pass-terms">FICTIONAL · RESEARCH ONLY · NO CASH VALUE · NOT REDEEMABLE</div></div>`;
   }
 
   function renderReward() {
     state.screen = "reward";
     const reward = rewardForLevel();
-    screen.innerHTML = `<p class="eyebrow">Earned reward</p><h1>${reward.id === "none" ? "No reward was unlocked." : "Your Fictional Reward Pass"}</h1>${rewardPass(reward)}
-      ${reward.id === "none" ? `<button class="primary" data-reward="none">Continue</button>` : `<h2>What would you do with this fictional reward?</h2><div class="choice-list"><button class="choice" data-reward="redeem"><strong>Redeem it</strong><small>Use it during an in-person Burger Borough visit.</small></button><button class="choice" data-reward="save"><strong>Save it</strong><small>Keep it for a future in-person visit.</small></button><button class="choice" data-reward="decline"><strong>Do not use it</strong><small>Continue without redeeming the reward.</small></button></div>`}
+    const reviewingExit = state.exitReview && state.completedLevel < 6;
+    const heading = reward.id === "none" ? (reviewingExit ? "No reward unlocked yet." : "No reward was unlocked.") : "Your Fictional Reward Pass";
+    const nextAction = reviewingExit
+      ? `<h2>What would you like to do?</h2><div class="exit-decision-grid"><button class="exit-decision" data-action="resume-after-review">Keep Playing From Where I Stopped</button><button class="exit-decision" data-action="finish-early">Finish Gameplay and Continue to Survey</button></div><p class="decision-note">Gameplay data will not be finalized until you choose to continue to the survey.</p>`
+      : `<button class="primary" data-action="finish-reward">Continue to Survey</button>`;
+    screen.innerHTML = `<p class="eyebrow">${reviewingExit ? "Current reward status" : "Earned reward"}</p><h1>${heading}</h1>${rewardPass(reward)}
+      ${nextAction}
       <div class="notice">Burger Borough, Pizza Pleasure Palace, Borough Bucks, and all displayed rewards are fictional and were created only for this research experience.</div>`;
     save();
   }
@@ -801,16 +925,26 @@
       bb_current_level: String(state.level),
       bb_current_order: String(Math.min(state.orderIndex + 1, levelCombos().length)),
       bb_total_score: String(state.totalScore),
+      bb_bucks_earned: String(boroughBucks()),
+      bb_progress_stage: String(progressStage()),
+      bb_star_rating: starRating(),
       bb_reward_tier: rewardForLevel().id,
-      bb_reward_choice: state.rewardChoice || "none",
       bb_ended_early: String(state.endedEarly),
       bb_exit_reason: state.exitReason || "completed",
+      bb_exit_attempts: String(state.exitAttempts),
+      bb_resumed_after_exit: String(state.resumedAfterExit),
+      bb_resume_count: String(state.resumeCount),
+      bb_first_exit_level: String(state.firstExitLevel),
+      bb_first_exit_order: String(state.firstExitOrder),
+      bb_first_exit_active_seconds: String(state.firstExitActiveSeconds),
       bb_total_seconds: String(Math.round((Date.now() - state.startedAt) / 1000)),
       bb_active_seconds: String(Math.round(totalActiveSeconds())),
       bb_level_times: compact(state.levelTimes),
       bb_level_scores: compact(state.levelScores),
       bb_level_errors: compact(state.levelErrors),
       bb_level_timeouts: compact(state.levelTimeouts),
+      bb_level_failures: compact(state.levelFailures),
+      bb_total_level_failures: String(state.levelFailures.reduce((sum, value) => sum + value, 0)),
       bb_restarts: compact(state.restarts),
       bb_orders_served: String(state.ordersServed),
       bb_scheduled_orders_completed: String(state.scheduledOrdersCompleted),
@@ -846,6 +980,7 @@
     else if (state.screen === "play") renderPlay();
     else if (state.screen === "complaint") renderComplaint();
     else if (state.screen === "complete") renderComplete();
+    else if (state.screen === "level-failed") renderLevelFailed();
     else if (state.screen === "results") renderResults();
     else if (state.screen === "reward") renderReward();
     else if (state.screen === "continue") renderContinue();
@@ -857,10 +992,6 @@
     if (!button) return;
     const action = button.dataset.action;
     if (action === "begin") {
-      renderBrief();
-    } else if (button.dataset.hire) {
-      state.storyChoices[state.level - 1] = button.dataset.hire;
-      save();
       renderBrief();
     } else if (action === "start-level") {
       setupLevel();
@@ -874,37 +1005,41 @@
       renderPlay();
     } else if (action === "serve-order") {
       serveOrder();
-    } else if (button.dataset.recovery) {
-      state.recoveryChoice = button.dataset.recovery;
-      save();
-      renderComplaint();
     } else if (action === "start-remake") {
       startRemake();
     } else if (action === "restart-level") {
+      restartLevel();
+    } else if (action === "retry-failed-level") {
       restartLevel();
     } else if (action === "next-level") {
       state.level += 1;
       state.screen = "brief";
       renderBrief();
     } else if (action === "finish-game") {
+      state.exitReview = false;
+      state.endedEarly = false;
+      state.exitReason = "completed";
       renderResults();
     } else if (action === "request-exit") {
-      state.resumeScreen = state.screen;
-      renderExitConfirm();
+      beginExitAttempt();
     } else if (action === "resume") {
-      const resume = state.resumeScreen || "brief";
-      state.screen = resume;
-      if (resume === "play") resumeActiveClocks();
-      restoreScreen();
-    } else if (action === "confirm-exit") {
-      state.endedEarly = true;
-      state.exitReason = `voluntary_level_${state.level}_order_${Math.min(state.orderIndex + 1, levelCombos().length)}`;
-      renderResults();
+      resumeAfterExit();
+    } else if (action === "review-exit") {
+      beginExitReview();
+    } else if (action === "resume-after-review") {
+      resumeAfterExit();
+    } else if (action === "finish-early") {
+      finishGameplayEarly();
     } else if (action === "view-reward") {
       renderReward();
-    } else if (button.dataset.reward) {
-      state.rewardChoice = button.dataset.reward;
+    } else if (action === "finish-reward") {
       renderContinue();
+    } else if (action === "review-ticket") {
+      const ticket = document.querySelector("#currentTicket");
+      if (ticket && typeof ticket.scrollIntoView === "function") {
+        ticket.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (typeof ticket.focus === "function") ticket.focus({ preventScroll: true });
+      }
     } else if (action === "return-survey") {
       returnToSurvey();
     }
@@ -941,6 +1076,9 @@
     getOrder,
     timeLimitFor,
     validateSelections,
+    boroughBucks,
+    progressStage,
+    starRating,
     resultPayload,
     getState: () => JSON.parse(JSON.stringify(state))
   };

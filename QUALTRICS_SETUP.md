@@ -2,13 +2,13 @@
 
 ## 1. Publish these files
 
-Upload every file in this folder to the top level of the public GitHub repository `burger-borough-study`. Keep GitHub Pages set to `main` and `/ (root)`.
+Upload every file in this folder to the top level of the public GitHub repository `burger-borough-a-b-study`. Keep GitHub Pages set to `main` and `/ (root)`.
 
 Confirm these paths open after deployment:
 
 ```text
-https://edwardalbertjaros.github.io/burger-borough-study/game-1.html?reset=1
-https://edwardalbertjaros.github.io/burger-borough-study/game-2.html?reset=1
+https://edwardalbertjaros.github.io/burger-borough-a-b-study/game-1.html?reset=1
+https://edwardalbertjaros.github.io/burger-borough-a-b-study/game-2.html?reset=1
 ```
 
 Do not direct participants to the repository root. The root intentionally has no condition chooser.
@@ -24,16 +24,26 @@ __js_bb_completed_level
 __js_bb_current_level
 __js_bb_current_order
 __js_bb_total_score
+__js_bb_bucks_earned
+__js_bb_progress_stage
+__js_bb_star_rating
 __js_bb_reward_tier
-__js_bb_reward_choice
 __js_bb_ended_early
 __js_bb_exit_reason
+__js_bb_exit_attempts
+__js_bb_resumed_after_exit
+__js_bb_resume_count
+__js_bb_first_exit_level
+__js_bb_first_exit_order
+__js_bb_first_exit_active_seconds
 __js_bb_total_seconds
 __js_bb_active_seconds
 __js_bb_level_times
 __js_bb_level_scores
 __js_bb_level_errors
 __js_bb_level_timeouts
+__js_bb_level_failures
+__js_bb_total_level_failures
 __js_bb_restarts
 __js_bb_orders_served
 __js_bb_scheduled_orders_completed
@@ -68,7 +78,7 @@ Place a Descriptive Text question in the game block. In its HTML source editor, 
 <iframe
   id="burgerBoroughGame"
   title="Burger Borough restaurant game"
-  src="https://edwardalbertjaros.github.io/burger-borough-study/${e://Field/game_file}"
+  src="https://edwardalbertjaros.github.io/burger-borough-a-b-study/${e://Field/game_file}?reset=1"
   style="width:100%;height:820px;border:0;border-radius:16px"
   allow="fullscreen">
 </iframe>
@@ -84,7 +94,7 @@ Open the game question's Question Behavior → JavaScript editor and paste the c
 https://edwardalbertjaros.github.io
 ```
 
-The listener verifies both the origin and the exact iframe window. It hides the Qualtrics Next button, stores progress after each completed level, acknowledges the final payload, and advances only after the participant selects Send Results and Continue to Survey.
+The listener verifies both the origin and the exact iframe window. It accepts only the documented Burger Borough fields, hides the Qualtrics Next button, stores progress after each completed level, acknowledges the final payload, and advances only after the participant selects Send Results and Continue to Survey.
 
 ## 6. Run a published-survey test
 
@@ -92,10 +102,13 @@ Use the published anonymous survey link rather than relying only on Preview. Com
 
 1. Full completion through `game-1.html`.
 2. Full completion through `game-2.html`.
-3. Early exit from each path.
-4. At least one incorrect order and one timer expiration.
-5. The Level 5 complaint remake.
-6. A level restart.
-7. Each final reward-response option.
+3. Early exit from each path without resuming.
+4. Exit review followed by resuming from the exact saved order in each path.
+5. A second exit after resuming, followed by final submission to Qualtrics.
+6. At least one incorrect order and one timer expiration.
+7. The Level 5 complaint remake.
+8. A level restart.
+9. The final earned-reward display and transition into the Qualtrics redemption-intention measures.
+10. Five incorrect serves in one level, the Rush Failed screen, and a successful level retry.
 
 Recruitment must wait until both paths generate complete Qualtrics rows and the only condition-specific differences are the planned story fields.
