@@ -1,0 +1,10 @@
+[[AdvancedFormat]]
+[[ED:game_file]]
+[[ED:__js_bb_access_status]]
+[[ED:__js_bb_exposure_level]]
+[[ED:__js_bb_condition]]
+[[ED:__js_bb_payload_json]]
+
+[[Block:Burger Borough Compact Schema Placeholder]]
+[[Question:DB]]
+Burger Borough compact Embedded Data fields were imported. Replace this placeholder with the approved survey blocks or copy the required blocks from the existing thesis survey.
