@@ -122,3 +122,4 @@ The project uses only HTML, CSS, vanilla JavaScript, Markdown, and one optional 
 ## Required validation
 
 Follow `TESTING_CHECKLIST.md` and `QUALTRICS_SETUP.md`. Automated tests do not replace a complete run through the published anonymous Qualtrics survey on desktop and mobile. Recruitment must wait until both assigned paths produce complete, correctly routed exported response rows.
+ 
